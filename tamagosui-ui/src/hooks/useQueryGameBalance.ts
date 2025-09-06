@@ -17,15 +17,20 @@ const GameBalanceBCS = bcs.struct("GameBalance", {
   play_experience_gain: bcs.u64(),
   play_happiness_gain: bcs.u8(),
 
+  relax_energy_gain: bcs.u8(),
+  relax_mood_gain: bcs.u8(),
+  relax_experience_gain: bcs.u64(),
+
   work_energy_loss: bcs.u8(),
   work_happiness_loss: bcs.u8(),
   work_hunger_loss: bcs.u8(),
   work_coins_gain: bcs.u64(),
   work_experience_gain: bcs.u64(),
+  work_mood_loss: bcs.u8(),
 
   sleep_energy_gain_ms: bcs.u64(),
-  sleep_hunger_loss_ms: bcs.u64(),
   sleep_happiness_loss_ms: bcs.u64(),
+  sleep_hunger_loss_ms: bcs.u64(),
 
   exp_per_level: bcs.u64(),
 });

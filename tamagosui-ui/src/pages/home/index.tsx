@@ -11,7 +11,7 @@ export default function HomePage() {
   return (
     <div className="min-h-screen flex flex-col bg-secondary">
       <Header />
-      <h1 className="pt-24">Your Address: {currentAccount?.address}</h1>
+      <h1 className="pt-24"></h1>
       <main className="flex-grow flex items-center justify-center p-4">
         {!currentAccount ? (
           <div className="text-center p-8 border-4 border-primary bg-background shadow-[8px_8px_0px_#000]">

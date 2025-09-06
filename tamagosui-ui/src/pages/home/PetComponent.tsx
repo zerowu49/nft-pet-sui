@@ -11,6 +11,8 @@ import {
   BriefcaseIcon,
   ZapIcon,
   ChevronUpIcon,
+  RockingChairIcon,
+  SmileIcon,
 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
@@ -39,6 +41,7 @@ import { useMutatePlayWithPet } from "@/hooks/useMutatePlayWithPet";
 import { useMutateWakeUpPet } from "@/hooks/useMutateWakeUpPet";
 import { useMutateWorkForCoins } from "@/hooks/useMutateWorkForCoins";
 import { useQueryGameBalance } from "@/hooks/useQueryGameBalance";
+import { useMutateRelax } from "@/hooks/useMutateRelax";
 
 import type { PetStruct } from "@/types/Pet";
 
@@ -59,6 +62,7 @@ export default function PetComponent({ pet }: PetDashboardProps) {
     useMutatePlayWithPet();
   const { mutate: mutateWorkForCoins, isPending: isWorking } =
     useMutateWorkForCoins();
+  const { mutate: mutateRelax, isPending: isRelaxing } = useMutateRelax();
 
   const { mutate: mutateLetPetSleep, isPending: isSleeping } =
     useMutateLetPetSleep();
@@ -83,14 +87,14 @@ export default function PetComponent({ pet }: PetDashboardProps) {
             1000 / Number(gameBalance.sleep_hunger_loss_ms);
           const happinessLossPerSecond =
             1000 / Number(gameBalance.sleep_happiness_loss_ms);
-
           return {
             energy: Math.min(
               gameBalance.max_stat,
-              prev.energy + energyPerSecond,
+              prev.energy + energyPerSecond
             ),
             hunger: Math.max(0, prev.hunger - hungerLossPerSecond),
             happiness: Math.max(0, prev.happiness - happinessLossPerSecond),
+            mood: prev.mood,
           };
         });
       }, 1000); // Runs every second
@@ -125,11 +129,15 @@ export default function PetComponent({ pet }: PetDashboardProps) {
     !pet.isSleeping &&
     pet.stats.energy >= gameBalance.work_energy_loss &&
     pet.stats.happiness >= gameBalance.work_happiness_loss &&
-    pet.stats.hunger >= gameBalance.work_hunger_loss;
+    pet.stats.hunger >= gameBalance.work_hunger_loss &&
+    pet.stats.mood >= gameBalance.work_mood_loss;
+
   const canLevelUp =
     !pet.isSleeping &&
     pet.game_data.experience >=
       pet.game_data.level * Number(gameBalance.exp_per_level);
+
+  const canRelax = !pet.isSleeping;
 
   return (
     <TooltipProvider>
@@ -191,6 +199,11 @@ export default function PetComponent({ pet }: PetDashboardProps) {
                 label="Hunger"
                 value={displayStats.hunger}
               />
+              <StatDisplay
+                icon={<SmileIcon className="text-blue-400" />}
+                label="Mood"
+                value={displayStats.mood}
+              />
             </div>
           </div>
 
@@ -231,6 +244,15 @@ export default function PetComponent({ pet }: PetDashboardProps) {
                 isPending={isWorking}
                 label="Work"
                 icon={<BriefcaseIcon />}
+              />
+            </div>
+            <div className="col-span-2">
+              <ActionButton
+                onClick={() => mutateRelax({ petId: pet.id })}
+                disabled={!canRelax || isAnyActionPending}
+                isPending={isRelaxing}
+                label="Relaxing"
+                icon={<RockingChairIcon />}
               />
             </div>
           </div>

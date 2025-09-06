@@ -21,7 +21,7 @@ export function getSuiObjectFields<T>(object: SuiObjectResponse): T | null {
 }
 
 export function normalizeSuiPetObject(
-  object: SuiObjectResponse,
+  object: SuiObjectResponse
 ): PetStruct | null {
   const fields = getSuiObjectFields<RawPetStructFields>(object);
   if (!fields) return null;
@@ -35,6 +35,7 @@ export function normalizeSuiPetObject(
       energy: fields.stats.fields.energy,
       happiness: fields.stats.fields.happiness,
       hunger: fields.stats.fields.hunger,
+      mood: fields.stats.fields.mood,
     },
     game_data: {
       coins: Number(fields.game_data.fields.coins),

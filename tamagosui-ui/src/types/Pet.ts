@@ -8,6 +8,7 @@ type PetStructStats = {
   energy: number;
   happiness: number;
   hunger: number;
+  mood: number;
 };
 
 export type PetStruct = {
@@ -41,6 +42,8 @@ export type RawPetStructFields = {
   name: string;
   image_url: string;
   adopted_at: string;
-  stats: { fields: { energy: number; happiness: number; hunger: number } };
+  stats: {
+    fields: { energy: number; happiness: number; hunger: number; mood: number };
+  };
   game_data: { fields: { coins: number; experience: number; level: number } };
 };

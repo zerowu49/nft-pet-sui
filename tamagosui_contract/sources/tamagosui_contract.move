@@ -17,6 +17,7 @@ const E_NO_ITEM_EQUIPPED: u64 = 106;
 const E_NOT_ENOUGH_EXP: u64 = 107;
 const E_PET_IS_ASLEEP: u64 = 108;
 const E_PET_IS_ALREADY_ASLEEP: u64 = 109;
+const E_PET_IS_NOT_IN_MOOD: u64 = 110;
 
 // === Constants ===
 const PET_LEVEL_1_IMAGE_URL: vector<u8> =
@@ -51,12 +52,17 @@ public struct GameBalance has copy, drop {
     play_hunger_loss: u8,
     play_experience_gain: u64,
     play_happiness_gain: u8,
+    // Relax settings
+    relax_energy_gain: u8,
+    relax_mood_gain: u8,
+    relax_experience_gain: u64,
     // Work settings
     work_energy_loss: u8,
     work_happiness_loss: u8,
     work_hunger_loss: u8,
     work_coins_gain: u64,
     work_experience_gain: u64,
+    work_mood_loss: u8,
     // Sleep settings (in milliseconds)
     sleep_energy_gain_ms: u64,
     sleep_happiness_loss_ms: u64,
@@ -77,12 +83,17 @@ fun get_game_balance(): GameBalance {
         play_hunger_loss: 15,
         play_experience_gain: 10,
         play_happiness_gain: 25,
+        // Relax
+        relax_energy_gain: 10,
+        relax_mood_gain: 30,
+        relax_experience_gain: 5,
         // Work
         work_energy_loss: 20,
         work_hunger_loss: 20,
         work_happiness_loss: 20,
         work_coins_gain: 10,
         work_experience_gain: 15,
+        work_mood_loss: 20,
         // Sleep (rates per millisecond)
         sleep_energy_gain_ms: 1000, // 1 energy per second
         sleep_happiness_loss_ms: 700, // 1 happiness loss per 0.7 seconds
@@ -115,6 +126,7 @@ public struct PetStats has store {
     energy: u8,
     happiness: u8,
     hunger: u8,
+    mood: u8,
 }
 
 public struct PetGameData has store {
@@ -137,6 +149,7 @@ public struct PetAction has copy, drop {
     energy: u8,
     happiness: u8,
     hunger: u8,
+    mood: u8,
 }
 
 // MODULE INITIALIZATION
@@ -188,6 +201,7 @@ public fun adopt_pet(name: String, clock: &Clock, ctx: &mut TxContext) {
         energy: 60,
         happiness: 50,
         hunger: 40,
+        mood: 50,
     };
 
     let pet_game_data = PetGameData {
@@ -256,6 +270,7 @@ public fun work_for_coins(pet: &mut Pet) {
     assert!(pet.stats.energy >= gb.work_energy_loss, E_PET_TOO_TIRED);
     assert!(pet.stats.happiness >= gb.work_happiness_loss, E_PET_NOT_HUNGRY);
     assert!(pet.stats.hunger >= gb.work_hunger_loss, E_PET_TOO_HUNGRY);
+    assert!(pet.stats.mood >= gb.work_mood_loss, E_PET_IS_NOT_IN_MOOD);
 
     pet.stats.energy = if (pet.stats.energy >= gb.work_energy_loss)
         pet.stats.energy - gb.work_energy_loss else 0;
@@ -263,6 +278,9 @@ public fun work_for_coins(pet: &mut Pet) {
         pet.stats.happiness - gb.work_happiness_loss else 0;
     pet.stats.hunger = if (pet.stats.hunger >= gb.work_hunger_loss)
         pet.stats.hunger - gb.work_hunger_loss else 0;
+    pet.stats.mood = if (pet.stats.mood >= gb.work_mood_loss) pet.stats.mood - gb.work_mood_loss
+    else 0;
+
     pet.game_data.coins = pet.game_data.coins + gb.work_coins_gain;
     pet.game_data.experience = pet.game_data.experience + gb.work_experience_gain;
 
@@ -342,6 +360,21 @@ public fun wake_up_pet(pet: &mut Pet, clock: &Clock) {
     emit_action(pet, b"woke_up");
 }
 
+public fun relaxing_pet(pet: &mut Pet) {
+    assert!(!is_sleeping(pet), E_PET_IS_ASLEEP);
+
+    let gb = get_game_balance();
+
+    pet.stats.energy = if (pet.stats.energy + gb.relax_energy_gain >= gb.max_stat) gb.max_stat
+    else pet.stats.energy + gb.relax_energy_gain;
+    pet.stats.mood = if (pet.stats.mood + gb.relax_mood_gain  >= gb.max_stat) gb.max_stat
+    else pet.stats.mood + gb.relax_mood_gain;
+
+    pet.game_data.experience = pet.game_data.experience + gb.relax_experience_gain;
+
+    emit_action(pet, b"relaxing_pet");
+}
+
 #[allow(lint(self_transfer))]
 public fun mint_accessory(ctx: &mut TxContext) {
     let accessory = PetAccessory {
@@ -389,6 +422,7 @@ fun emit_action(pet: &Pet, action: vector<u8>) {
         energy: pet.stats.energy,
         happiness: pet.stats.happiness,
         hunger: pet.stats.hunger,
+        mood: pet.stats.mood,
     });
 }
 
