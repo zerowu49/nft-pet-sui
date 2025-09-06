@@ -7,7 +7,7 @@ Pet Game built on Sui Smart Contract where you can adopt, feed, play, relax, lev
 - Adopt a new pet
 - Feed your pet
 - Play with your pet
-- Relax your pet
+- Relax your pet <img src="https://png.pngtree.com/png-vector/20220519/ourmid/pngtree-new-badge-icon-vector-design-trendy-png-image_4705598.png" width="40" height="40" alt="New">
 - Level up your pet
 - Sleep your pet
 - Work for coins
