@@ -13,6 +13,9 @@ import {
   ChevronUpIcon,
   RockingChairIcon,
   SmileIcon,
+  FeatherIcon,
+  MehIcon,
+  FrownIcon,
 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
@@ -44,6 +47,7 @@ import { useQueryGameBalance } from "@/hooks/useQueryGameBalance";
 import { useMutateRelax } from "@/hooks/useMutateRelax";
 
 import type { PetStruct } from "@/types/Pet";
+import { useMutateReleasePet } from "@/hooks/useMutateReleasePet";
 
 type PetDashboardProps = {
   pet: PetStruct;
@@ -70,6 +74,8 @@ export default function PetComponent({ pet }: PetDashboardProps) {
     useMutateWakeUpPet();
   const { mutate: mutateLevelUp, isPending: isLevelingUp } =
     useMutateCheckAndLevelUp();
+  const { mutate: mutateReleasePet, isPending: isReleasing } =
+    useMutateReleasePet();
 
   useEffect(() => {
     setDisplayStats(pet.stats);
@@ -114,7 +120,12 @@ export default function PetComponent({ pet }: PetDashboardProps) {
   // --- Client-side UI Logic & Button Disabling ---
   // `isAnyActionPending` prevents the user from sending multiple transactions at once.
   const isAnyActionPending =
-    isFeeding || isPlaying || isSleeping || isWorking || isLevelingUp;
+    isFeeding ||
+    isPlaying ||
+    isSleeping ||
+    isWorking ||
+    isLevelingUp ||
+    isReleasing;
 
   // These `can...` variables mirror the smart contract's rules (`assert!`) on the client-side.
   const canFeed =
@@ -138,6 +149,26 @@ export default function PetComponent({ pet }: PetDashboardProps) {
       pet.game_data.level * Number(gameBalance.exp_per_level);
 
   const canRelax = !pet.isSleeping;
+
+  const MoodIcon = ({ mood }: { mood: number }) => {
+    if (mood >= 70) {
+      return <SmileIcon className="w-5 h-5 text-green-500" />;
+    } else if (mood >= 40) {
+      return <MehIcon className="w-5 h-5 text-yellow-500" />;
+    } else {
+      return <FrownIcon className="w-5 h-5 text-red-500" />;
+    }
+  };
+
+  const getMoodStatus = (mood: number) => {
+    if (mood >= 70) {
+      return "Excited";
+    } else if (mood >= 40) {
+      return "Contented";
+    } else {
+      return "Depressed";
+    }
+  };
 
   return (
     <TooltipProvider>
@@ -173,6 +204,17 @@ export default function PetComponent({ pet }: PetDashboardProps) {
               </Tooltip>
               <Tooltip>
                 <TooltipTrigger className="flex items-center gap-2">
+                  <MoodIcon mood={displayStats.mood} />
+                  <span className="font-bold">
+                    {getMoodStatus(displayStats.mood)}
+                  </span>
+                </TooltipTrigger>
+                <TooltipContent>
+                  <p>Mood: {displayStats.mood}</p>
+                </TooltipContent>
+              </Tooltip>
+              <Tooltip>
+                <TooltipTrigger className="flex items-center gap-2">
                   <span className="font-bold">{pet.game_data.experience}</span>
                   <StarIcon className="w-5 h-5 text-purple-500" />
                 </TooltipTrigger>
@@ -198,11 +240,6 @@ export default function PetComponent({ pet }: PetDashboardProps) {
                 icon={<DrumstickIcon className="text-orange-500" />}
                 label="Hunger"
                 value={displayStats.hunger}
-              />
-              <StatDisplay
-                icon={<SmileIcon className="text-blue-400" />}
-                label="Mood"
-                value={displayStats.mood}
               />
             </div>
           </div>
@@ -277,14 +314,26 @@ export default function PetComponent({ pet }: PetDashboardProps) {
                 className="w-full bg-blue-600 hover:bg-blue-700"
               >
                 {isSleeping ? (
-                  <Loader2Icon className="mr-2 h-4 w-4 animate-spin" />
+                  <Loader2Icon className="h-4 w-4 animate-spin" />
                 ) : (
-                  <BedIcon className="mr-2 h-4 w-4" />
+                  <BedIcon className="h-4 w-4" />
                 )}{" "}
                 Sleep
               </Button>
             )}
           </div>
+          <Button
+            onClick={() => mutateReleasePet({ petId: pet.id })}
+            disabled={isAnyActionPending}
+            className="w-full bg-red-600 hover:bg-red-700"
+          >
+            {isReleasing ? (
+              <Loader2Icon className="h-4 w-4 animate-spin" />
+            ) : (
+              <FeatherIcon className="h-4 w-4" />
+            )}{" "}
+            Release Pet
+          </Button>
         </CardContent>
         <WardrobeManager
           pet={pet}

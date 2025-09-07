@@ -26,22 +26,25 @@ export function useQueryOwnedPet() {
       });
       if (petResponse.data.length === 0) return null;
 
-      const petObject = petResponse.data[0];
-      const normalizedPet = normalizeSuiPetObject(petObject);
+      const listPets = [];
+      for (const petObject of petResponse.data) {
+        const normalizedPet = normalizeSuiPetObject(petObject);
 
-      if (!normalizedPet) return null;
+        if (!normalizedPet) return null;
 
-      const dynamicFields = await suiClient.getDynamicFields({
-        parentId: normalizedPet.id,
-      });
+        const dynamicFields = await suiClient.getDynamicFields({
+          parentId: normalizedPet.id,
+        });
 
-      const isSleeping = dynamicFields.data.some(
-        (field) =>
-          field.name.type === "0x1::string::String" &&
-          field.name.value === "sleep_started_at",
-      );
+        const isSleeping = dynamicFields.data.some(
+          (field) =>
+            field.name.type === "0x1::string::String" &&
+            field.name.value === "sleep_started_at"
+        );
+        listPets.push({ ...normalizedPet, isSleeping });
+      }
 
-      return { ...normalizedPet, isSleeping };
+      return listPets;
     },
     enabled: !!currentAccount,
   });

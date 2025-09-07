@@ -18,8 +18,13 @@ export function StatDisplay({ icon, label, value }: StatDisplayProps) {
     <Tooltip>
       <TooltipTrigger className="w-full">
         <div className="flex items-center gap-3 w-full">
-          <div className="w-6 h-6">{icon}</div>
-          <Progress value={value} className="w-full" />
+          <div className="flex flex-1 gap-3">
+            <div className="w-6 h-6">{icon}</div>
+            {label}:
+          </div>
+          <div className="flex-1">
+            <Progress value={value} className="w-full" />
+          </div>
         </div>
       </TooltipTrigger>
       <TooltipContent>
