@@ -1,5 +1,5 @@
 import { useCurrentAccount, useSuiClient } from "@mysten/dapp-kit";
-import { bcs } from "@mysten/bcs";
+import { bcs } from "@mysten/sui/bcs";
 import { Transaction } from "@mysten/sui/transactions";
 import { useQuery } from "@tanstack/react-query";
 
